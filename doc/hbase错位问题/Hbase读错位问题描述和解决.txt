@@ -1,0 +1,13 @@
+-   HBASE读错位问题：
+	现象：有时候，hbase会出现读错位问题。但是，重新读又正常了。
+	过程：从线上观察到hbase有时候读取很慢。但是python读取超时会抛出Exception，而且超时时间是100秒，排除超时可能。
+		python程序使用thrift的get接口获取记录。不是使用scan接口。而且，获取的key都是不连续的。
+	原因：thrift编译出来的代码的seqid没有递增导致。
+		我们现在采取的方案是：
+		1.修改Hbase.py，加入seqid的递增和校验。如果校验失败，将raise一个TApplicationException 内容是当前的seqid校验失败。
+		2.Hbaseutil.py需要能够catch到这个Exception，进行断开重连。
+
+修改的DIFF：
+
+diff Hbase_old.py Hbase.py > HBASE-THRIFT.diff
+patch Hbase.py < HBASE-THRIFT.diff 

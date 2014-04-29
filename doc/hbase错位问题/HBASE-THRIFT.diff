@@ -1,0 +1,183 @@
+621a622,631
+>   def incSeqid(self):
+>     self._seqid = self._seqid + 1
+> 
+>   def checkSeqid(self, rseqid):
+>     if rseqid != self._seqid :
+>       raise TApplicationException(TApplicationException.BAD_SEQUENCE_ID,
+>       "__seqid"+str(self._seqid)+" rseqid:"+str(rseqid)+" failed: out of sequence response");
+> 
+> 
+> 
+632a643
+>     self.incSeqid()
+641a653
+>     self.checkSeqid(rseqid)
+665a678
+>     self.incSeqid()
+674a688
+>     self.checkSeqid(rseqid)
+697a712
+>     self.incSeqid()
+706a722
+>     self.checkSeqid(rseqid)
+729a746
+>     self.incSeqid()
+738a756
+>     self.checkSeqid(rseqid)
+759a778
+>     self.incSeqid()
+768a788
+>     self.checkSeqid(rseqid)
+790a811
+>     self.incSeqid()
+798a820
+>     self.checkSeqid(rseqid)
+825a848
+>     self.incSeqid()
+834a858
+>     self.checkSeqid(rseqid)
+861a886
+>     self.incSeqid()
+870a896
+>     self.checkSeqid(rseqid)
+903a930
+>     self.incSeqid()
+913a941
+>     self.checkSeqid(rseqid)
+943a972
+>     self.incSeqid()
+952a982
+>     self.checkSeqid(rseqid)
+981a1012
+>     self.incSeqid()
+993a1025
+>     self.checkSeqid(rseqid)
+1025a1058
+>     self.incSeqid()
+1038a1072
+>     self.checkSeqid(rseqid)
+1072a1107
+>     self.incSeqid()
+1086a1122
+>     self.checkSeqid(rseqid)
+1116a1153
+>     self.incSeqid()
+1127a1165
+>     self.checkSeqid(rseqid)
+1158a1197
+>     self.incSeqid()
+1170a1210
+>     self.checkSeqid(rseqid)
+1201a1242
+>     self.incSeqid()
+1213a1255
+>     self.checkSeqid(rseqid)
+1245a1288
+>     self.incSeqid()
+1258a1302
+>     self.checkSeqid(rseqid)
+1288a1333
+>     self.incSeqid()
+1299a1345
+>     self.checkSeqid(rseqid)
+1330a1377
+>     self.incSeqid()
+1342a1390
+>     self.checkSeqid(rseqid)
+1373a1422
+>     self.incSeqid()
+1385a1435
+>     self.checkSeqid(rseqid)
+1417a1468
+>     self.incSeqid()
+1430a1482
+>     self.checkSeqid(rseqid)
+1461a1514
+>     self.incSeqid()
+1473a1527
+>     self.checkSeqid(rseqid)
+1505a1560
+>     self.incSeqid()
+1518a1574
+>     self.checkSeqid(rseqid)
+1548a1605
+>     self.incSeqid()
+1559a1617
+>     self.checkSeqid(rseqid)
+1590a1649
+>     self.incSeqid()
+1602a1662
+>     self.checkSeqid(rseqid)
+1630a1691
+>     self.incSeqid()
+1642a1704
+>     self.checkSeqid(rseqid)
+1672a1735
+>     self.incSeqid()
+1684a1748
+>     self.checkSeqid(rseqid)
+1712a1777
+>     self.incSeqid()
+1725a1791
+>     self.checkSeqid(rseqid)
+1750a1817
+>     self.incSeqid()
+1761a1829
+>     self.checkSeqid(rseqid)
+1787a1856
+>     self.incSeqid()
+1796a1866
+>     self.checkSeqid(rseqid)
+1817a1888
+>     self.incSeqid()
+1826a1898
+>     self.checkSeqid(rseqid)
+1853a1926
+>     self.incSeqid()
+1865a1939
+>     self.checkSeqid(rseqid)
+1891a1966
+>     self.incSeqid()
+1902a1978
+>     self.checkSeqid(rseqid)
+1936a2013
+>     self.incSeqid()
+1948a2026
+>     self.checkSeqid(rseqid)
+1985a2064
+>     self.incSeqid()
+1998a2078
+>     self.checkSeqid(rseqid)
+2029a2110
+>     self.incSeqid()
+2041a2123
+>     self.checkSeqid(rseqid)
+2077a2160
+>     self.incSeqid()
+2090a2174
+>     self.checkSeqid(rseqid)
+2129a2214
+>     self.incSeqid()
+2143a2229
+>     self.checkSeqid(rseqid)
+2177a2264
+>     self.incSeqid()
+2186a2274
+>     self.checkSeqid(rseqid)
+2223a2312
+>     self.incSeqid()
+2233a2323
+>     self.checkSeqid(rseqid)
+2262a2353
+>     self.incSeqid()
+2271a2363
+>     self.checkSeqid(rseqid)
+2300a2393
+>     self.incSeqid()
+2311a2405
+>     self.checkSeqid(rseqid)
+2339a2434
+>     self.incSeqid()
+2348a2444
+>     self.checkSeqid(rseqid)

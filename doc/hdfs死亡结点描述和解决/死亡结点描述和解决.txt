@@ -1,0 +1,66 @@
+现象：从2013-8-5开始，陆续有datanode变成死亡结点。死亡结点的datanode在日志中打印大量的启动接收数据线程的日志。但datanode处于假死状态没有响应。
+持续到9月25号，有恶化的趋势。从一个死亡结点变成有多个死亡结点同时出现，造成业务的数据块丢失。
+
+排查：经排查，发现每个机器出现死亡结点的时间都是相隔6小时或其整数倍。于是，问题定位到datanode的两个6小时的动作，心跳中的block-report或者DirectoryScaner。
+从时间上更吻合的是DirectoryScaner。在DirectoryScaner的代码中发现一个粗暴的上锁操作，结合Jstack打印的堆栈。发现上锁期间，会通过JAVA的File对象的getlength获取文件长度。
+而getlength是直接调用native函数查询linux的文件系统的。在磁盘繁忙的时候，会造成长时间持有住锁。导致心跳和数据收发进程堵塞。
+
+解决：将上锁期间的磁盘操作提取到上锁外部的异步扫描中。并且，在上锁检测期间，进行二次校验。
+详细的 DirectoryScaner.java的diff如下
+		163d162
+		<     private final long blockFileLength;
+		174,179d172
+		<       if( this.blockFile != null ){
+		<         this.blockFileLength = this.blockFile.length();
+		<       }
+		<       else{
+		<         this.blockFileLength = 0;
+		<       }
+		190,193d182
+		<     
+		<     long getBlockFileLength(){
+		<       return blockFileLength;
+		<     }
+		249,256c238
+		<       new Daemon.DaemonFactory(){
+		<                       @Override
+		<                       public Thread newThread(Runnable runnable) {
+		<                               Thread t=super.newThread(runnable);
+		<                               t.setPriority(Thread.NORM_PRIORITY);
+		<                               return t;
+		<                       }
+		<       });
+		---
+		>         new Daemon.DaemonFactory());
+		358d339
+		<     LOG.info("UCADD check and update finish");
+		368d348
+		<     long begin = System.currentTimeMillis();
+		370c350
+		<     LOG.info("UCADD finish diskReport using:"+(System.currentTimeMillis()-begin)+"ms");
+		---
+		> 
+		373,375d352
+		<       begin = System.currentTimeMillis();
+		<       int diskHit = 0;
+		<       LOG.info("UCADD begin to synchronized");
+		415,423c392,396
+		<               || info.getBlockFileLength() != memBlock.getNumBytes() ) {
+		<                 //double check the block file length
+		<                 diskHit++;
+		<                 if(info.getBlockFile().length() != memBlock.getNumBytes()){
+		<                   // Block metadata file is missing or has wrong generation stamp,
+		<                   // or block file length is different than expected
+		<                   statsRecord.mismatchBlocks++;
+		<                   addDifference(diffRecord, statsRecord, info);
+		<                 }
+		---
+		>               || info.getBlockFile().length() != memBlock.getNumBytes()) {
+		>             // Block metadata file is missing or has wrong generation stamp,
+		>             // or block file length is different than expected
+		>             statsRecord.mismatchBlocks++;
+		>             addDifference(diffRecord, statsRecord, info);
+		437d409
+		<       LOG.info("UCADD end synchronized using:"+(System.currentTimeMillis()-begin)+"ms diskHit:"+diskHit);
+		439d410
+		< 

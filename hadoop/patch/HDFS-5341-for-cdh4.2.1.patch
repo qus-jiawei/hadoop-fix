@@ -1,0 +1,107 @@
+diff --git a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DirectoryScanner.java b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DirectoryScanner.java
+index 55e87c7..2411f75 100644
+--- a/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DirectoryScanner.java
++++ b/hadoop-hdfs-project/hadoop-hdfs/src/main/java/org/apache/hadoop/hdfs/server/datanode/DirectoryScanner.java
+@@ -160,6 +160,7 @@ public class DirectoryScanner implements Runnable {
+     private final long blockId;
+     private final File metaFile;
+     private final File blockFile;
++    private final long blockFileLength;
+     private final FsVolumeSpi volume;
+ 
+     ScanInfo(long blockId) {
+@@ -170,6 +171,12 @@ public class DirectoryScanner implements Runnable {
+       this.blockId = blockId;
+       this.metaFile = metaFile;
+       this.blockFile = blockFile;
++      if( this.blockFile != null ){
++    	  this.blockFileLength = this.blockFile.length();
++      }
++      else{
++    	  this.blockFileLength = 0;
++      }
+       this.volume = vol;
+     }
+ 
+@@ -180,6 +187,10 @@ public class DirectoryScanner implements Runnable {
+     File getBlockFile() {
+       return blockFile;
+     }
++    
++    long getBlockFileLength(){
++      return blockFileLength;
++    }
+ 
+     long getBlockId() {
+       return blockId;
+@@ -235,7 +246,14 @@ public class DirectoryScanner implements Runnable {
+     reportCompileThreadPool = Executors.newFixedThreadPool(threads, 
+         new Daemon.DaemonFactory());
+     masterThread = new ScheduledThreadPoolExecutor(1,
+-        new Daemon.DaemonFactory());
++    	new Daemon.DaemonFactory(){
++			@Override
++			public Thread newThread(Runnable runnable) {
++				Thread t=super.newThread(runnable);
++				t.setPriority(Thread.NORM_PRIORITY);
++				return t;
++			}
++    	});
+   }
+ 
+   void start() {
+@@ -337,6 +355,7 @@ public class DirectoryScanner implements Runnable {
+             info.getMetaFile(), info.getVolume());
+       }
+     }
++    LOG.info("UCADD check and update finish");
+     if (!retainDiffs) clear();
+   }
+ 
+@@ -346,10 +365,14 @@ public class DirectoryScanner implements Runnable {
+    */
+   void scan() {
+     clear();
++    long begin = System.currentTimeMillis();
+     Map<String, ScanInfo[]> diskReport = getDiskReport();
+-
++    LOG.info("UCADD finish diskReport using:"+(System.currentTimeMillis()-begin)+"ms");
+     // Hold FSDataset lock to prevent further changes to the block map
+     synchronized(dataset) {
++      begin = System.currentTimeMillis();
++      int diskHit = 0;
++      LOG.info("UCADD begin to synchronized");
+       for (Entry<String, ScanInfo[]> entry : diskReport.entrySet()) {
+         String bpid = entry.getKey();
+         ScanInfo[] blockpoolReport = entry.getValue();
+@@ -389,11 +412,15 @@ public class DirectoryScanner implements Runnable {
+             // Block metadata file exits and block file is missing
+             addDifference(diffRecord, statsRecord, info);
+           } else if (info.getGenStamp() != memBlock.getGenerationStamp()
+-              || info.getBlockFile().length() != memBlock.getNumBytes()) {
+-            // Block metadata file is missing or has wrong generation stamp,
+-            // or block file length is different than expected
+-            statsRecord.mismatchBlocks++;
+-            addDifference(diffRecord, statsRecord, info);
++              || info.getBlockFileLength() != memBlock.getNumBytes() ) {
++        	  //double check the block file length
++        	  diskHit++;
++        	  if(info.getBlockFile().length() != memBlock.getNumBytes()){
++	            // Block metadata file is missing or has wrong generation stamp,
++	            // or block file length is different than expected
++	            statsRecord.mismatchBlocks++;
++	            addDifference(diffRecord, statsRecord, info);
++        	  }
+           }
+           d++;
+           m++;
+@@ -407,7 +434,9 @@ public class DirectoryScanner implements Runnable {
+         }
+         LOG.info(statsRecord.toString());
+       } //end for
++      LOG.info("UCADD end synchronized using:"+(System.currentTimeMillis()-begin)+"ms diskHit:"+diskHit);
+     } //end synchronized
++    
+   }
+ 
+   /**
