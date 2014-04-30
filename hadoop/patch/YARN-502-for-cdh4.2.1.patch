@@ -1,19 +1,12 @@
-diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/main/java/org/apache/hadoop/yarn/server/resourcemanager/rmnode/RMNodeImpl.java b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/main/java/org/apache/hadoop/yarn/server/resourcemanager/rmnode/RMNodeImpl.java
-index 83833b9..0123074 100644
---- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/main/java/org/apache/hadoop/yarn/server/resourcemanager/rmnode/RMNodeImpl.java
-+++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/main/java/org/apache/hadoop/yarn/server/resourcemanager/rmnode/RMNodeImpl.java
-@@ -458,8 +458,12 @@ public class RMNodeImpl implements RMNode, EventHandler<RMNodeEvent> {
-     @Override
-     public void transition(RMNodeImpl rmNode, RMNodeEvent event) {
-       // Inform the scheduler
--      rmNode.context.getDispatcher().getEventHandler().handle(
--          new NodeRemovedSchedulerEvent(rmNode));
-+      // If the current state is NodeState.UNHEALTHY
-+      // Then node is already been removed from the Scheduler
-+      if (!rmNode.getState().equals(NodeState.UNHEALTHY)) {
-+          rmNode.context.getDispatcher().getEventHandler().handle(
-+              new NodeRemovedSchedulerEvent(rmNode));
-+      }
-       rmNode.context.getDispatcher().getEventHandler().handle(
-           new NodesListManagerEvent(
-               NodesListManagerEventType.NODE_UNUSABLE, rmNode));
+diff --git a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/main/java/org/apache/hadoop/yarn/server/resourcemanager/scheduler/fair/FairScheduler.java b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/main/java/org/apache/hadoop/yarn/server/resourcemanager/scheduler/fair/FairScheduler.java
+index f51c6d7..b5c0c95 100644
+--- a/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/main/java/org/apache/hadoop/yarn/server/resourcemanager/scheduler/fair/FairScheduler.java
++++ b/hadoop-yarn-project/hadoop-yarn/hadoop-yarn-server/hadoop-yarn-server-resourcemanager/src/main/java/org/apache/hadoop/yarn/server/resourcemanager/scheduler/fair/FairScheduler.java
+@@ -618,6 +618,7 @@ public class FairScheduler implements ResourceScheduler {
+ 
+   private synchronized void removeNode(RMNode rmNode) {
+     FSSchedulerNode node = nodes.get(rmNode.getNodeID());
++    if( node == null ) return ;
+     Resources.subtractFrom(clusterCapacity, rmNode.getTotalCapability());
+ 
+     // Remove running containers
