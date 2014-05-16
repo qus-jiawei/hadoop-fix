@@ -26,3 +26,5 @@ After all the patch is apply, you could do as fellow to get the jar
 3. then the wanted jar is locate in build/
 
 At last, you could put the new jar to uhp's jar role directory.Once the uhp setup the role, it woule send the patched jar to the target machine.
+
+for hbase and hive, you could do as the same

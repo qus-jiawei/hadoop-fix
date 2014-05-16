@@ -1,0 +1,30 @@
+diff --git a/main/java/org/apache/hadoop/hbase/replication/regionserver/ReplicationSource.java b/main/java/org/apache/hadoop/hbase/replication/regionserver/ReplicationSource.java
+index b219123..23a799b 100644
+--- a/main/java/org/apache/hadoop/hbase/replication/regionserver/ReplicationSource.java
++++ b/main/java/org/apache/hadoop/hbase/replication/regionserver/ReplicationSource.java
+@@ -550,6 +550,7 @@ public class ReplicationSource extends Thread
+         }
+       }
+     } catch (IOException ioe) {
++      if (ioe instanceof EOFException && isCurrentLogEmpty()) return true;
+       LOG.warn(peerClusterZnode + " Got: ", ioe);
+       this.reader = null;
+       // TODO Need a better way to determinate if a file is really gone but
+@@ -562,6 +563,17 @@ public class ReplicationSource extends Thread
+     return true;
+   }
+ 
++  /*
++   * Checks whether the current log file is empty, and it is not a recovered queue. This is to
++   * handle scenario when in an idle cluster, there is no entry in the current log and we keep on
++   * trying to read the log file and get EOFEception. In case of a recovered queue the last log file
++   * may be empty, and we don't want to retry that.
++   */
++  private boolean isCurrentLogEmpty() {
++    return (this.repLogReader.getPosition() == 0 && !queueRecovered && queue.size() == 0);
++  }
++
++
+   /**
+    * Do the sleeping logic
+    * @param msg Why we sleep

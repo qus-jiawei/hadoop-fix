@@ -1,1 +1,8 @@
-*/build/
+# Byte-compiled / optimized / DLL files
+#
+
+hadoop/build
+
+hbase/build
+
+hive/build
