@@ -16,7 +16,7 @@ fi
 
 cd $SRC_DIR
 
-mvn package -DskipTests -Psecurity
+mvn clean package -Dhadoop.profile=23 -DskipTests -Psecurity
 
 #pick wanted tar
 today=`date +%Y%m%d`
